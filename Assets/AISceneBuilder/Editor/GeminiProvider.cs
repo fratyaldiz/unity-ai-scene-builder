@@ -13,8 +13,11 @@ namespace AISceneBuilder
     /// </summary>
     public class GeminiProvider : ILlmProvider
     {
+        // "gemini-flash-latest" her zaman güncel kararlı Flash modeline işaret eder;
+        // böylece model emekliye ayrıldığında kod kırılmaz. Sabit sürüm istenirse
+        // "gemini-3.5-flash" gibi bir kimlikle değiştirilebilir.
         private const string Endpoint =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
         public string DisplayName => "Google Gemini";
 
