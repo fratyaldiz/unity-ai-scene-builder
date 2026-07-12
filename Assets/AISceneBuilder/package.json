@@ -1,6 +1,6 @@
 {
   "name": "com.fratyaldiz.ai-scene-builder",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "AI Scene Builder",
   "description": "Metin komutlarini AI (Gemini / Claude) ile analiz edip projedeki prefab'leri sahneye yerlestiren Unity Editor araci. Tamamen editor'de calisir; API anahtarlari EditorPrefs'te yerel olarak saklanir.",
   "unity": "2021.3",

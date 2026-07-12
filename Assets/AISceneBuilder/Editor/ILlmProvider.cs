@@ -19,7 +19,11 @@ namespace AISceneBuilder
     public interface ILlmProvider
     {
         string DisplayName { get; }
-        Task<string> RequestScenePlanAsync(string apiKey, string prefabNameList, string userPrompt);
+
+        /// <summary>Model alanı boş bırakıldığında kullanılacak model kimliği.</summary>
+        string DefaultModel { get; }
+
+        Task<string> RequestScenePlanAsync(string apiKey, string model, string prefabNameList, string userPrompt);
     }
 
     public static class LlmProviderFactory

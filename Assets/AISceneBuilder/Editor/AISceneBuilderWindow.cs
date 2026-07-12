@@ -18,8 +18,11 @@ namespace AISceneBuilder
         private const string PromptStateKey = "AISceneBuilder_LastPrompt";
         private string ApiKeyPrefKey => "AISceneBuilder_ApiKey_" + _providerType;
 
+        private string ModelPrefKey => "AISceneBuilder_Model_" + _providerType;
+
         private LlmProviderType _providerType = LlmProviderType.Gemini;
         private string _apiKey = "";
+        private string _model = "";
         private string _userPrompt = "";
         private bool _showApiKey;      // Anahtarı göster/gizle
         private bool _isProcessing;    // Adım 4'te async istek sırasında UI'ı kilitlemek için
@@ -42,6 +45,7 @@ namespace AISceneBuilder
         {
             _providerType = (LlmProviderType)EditorPrefs.GetInt(ProviderPrefKey, (int)LlmProviderType.Gemini);
             _apiKey = EditorPrefs.GetString(ApiKeyPrefKey, "");
+            _model = EditorPrefs.GetString(ModelPrefKey, "");
             _userPrompt = SessionState.GetString(PromptStateKey, "");
             _prefabs = PrefabScanner.ScanProject();
         }
@@ -85,7 +89,10 @@ namespace AISceneBuilder
                 _providerType = newProvider;
                 EditorPrefs.SetInt(ProviderPrefKey, (int)_providerType);
                 _apiKey = EditorPrefs.GetString(ApiKeyPrefKey, "");
+                _model = EditorPrefs.GetString(ModelPrefKey, "");
             }
+
+            DrawModelField();
 
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -113,6 +120,35 @@ namespace AISceneBuilder
                 EditorGUILayout.HelpBox(
                     $"API anahtarı girilmedi. {hint}\nAnahtar EditorPrefs'te yerel olarak saklanır, projeyle paylaşılmaz.",
                     MessageType.Warning);
+            }
+        }
+
+        private void DrawModelField()
+        {
+            string defaultModel = LlmProviderFactory.Create(_providerType).DefaultModel;
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUI.BeginChangeCheck();
+                string shown = string.IsNullOrEmpty(_model) ? defaultModel : _model;
+                string newModel = EditorGUILayout.TextField("Model", shown);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    // Varsayılanla aynıysa boş saklanır; böylece varsayılan model
+                    // eklenti güncellemesiyle değişirse kullanıcı otomatik takip eder.
+                    _model = newModel.Trim() == defaultModel ? "" : newModel.Trim();
+                    EditorPrefs.SetString(ModelPrefKey, _model);
+                }
+
+                using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_model)))
+                {
+                    if (GUILayout.Button("Varsayılan", EditorStyles.miniButton, GUILayout.Width(70f)))
+                    {
+                        _model = "";
+                        EditorPrefs.SetString(ModelPrefKey, "");
+                        GUI.FocusControl(null);
+                    }
+                }
             }
         }
 
@@ -197,8 +233,10 @@ namespace AISceneBuilder
 
             try
             {
+                string model = string.IsNullOrEmpty(_model) ? provider.DefaultModel : _model;
                 string response = await provider.RequestScenePlanAsync(
                     _apiKey,
+                    model,
                     PrefabScanner.BuildNameList(_prefabs),
                     _userPrompt.Trim());
 

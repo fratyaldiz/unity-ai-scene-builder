@@ -16,18 +16,19 @@ namespace AISceneBuilder
         private const string Endpoint = "https://api.anthropic.com/v1/messages";
         private const string ApiVersion = "2023-06-01";
 
-        // Gerekirse "claude-haiku-4-5" gibi daha ekonomik bir modelle değiştirilebilir.
-        private const string Model = "claude-opus-4-8";
-
         public string DisplayName => "Anthropic Claude";
 
-        public async Task<string> RequestScenePlanAsync(string apiKey, string prefabNameList, string userPrompt)
+        // Pencerenin Model alanından "claude-haiku-4-5" gibi daha ekonomik
+        // bir kimlik de girilebilir.
+        public string DefaultModel => "claude-opus-4-8";
+
+        public async Task<string> RequestScenePlanAsync(string apiKey, string model, string prefabNameList, string userPrompt)
         {
             string systemPrompt = LlmRequestUtility.BuildSystemPrompt(prefabNameList);
 
             string body =
                 "{"
-                + "\"model\":\"" + Model + "\","
+                + "\"model\":\"" + LlmRequestUtility.JsonEscape(model) + "\","
                 + "\"max_tokens\":8192,"
                 + "\"system\":\"" + LlmRequestUtility.JsonEscape(systemPrompt) + "\","
                 + "\"messages\":[{\"role\":\"user\",\"content\":\"" + LlmRequestUtility.JsonEscape(userPrompt) + "\"}]"

@@ -13,16 +13,16 @@ namespace AISceneBuilder
     /// </summary>
     public class GeminiProvider : ILlmProvider
     {
-        // "gemini-flash-latest" her zaman güncel kararlı Flash modeline işaret eder;
-        // böylece model emekliye ayrıldığında kod kırılmaz. Sabit sürüm istenirse
-        // "gemini-3.5-flash" gibi bir kimlikle değiştirilebilir.
-        private const string Endpoint =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
-
         public string DisplayName => "Google Gemini";
 
-        public async Task<string> RequestScenePlanAsync(string apiKey, string prefabNameList, string userPrompt)
+        // "gemini-flash-latest" her zaman güncel kararlı Flash modeline işaret eder;
+        // böylece model emekliye ayrıldığında kod kırılmaz. Pencerenin Model alanından
+        // "gemini-3.1-pro-preview" gibi başka bir kimlik de girilebilir.
+        public string DefaultModel => "gemini-flash-latest";
+
+        public async Task<string> RequestScenePlanAsync(string apiKey, string model, string prefabNameList, string userPrompt)
         {
+            string endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
             string systemPrompt = LlmRequestUtility.BuildSystemPrompt(prefabNameList);
 
             string body =
@@ -32,7 +32,7 @@ namespace AISceneBuilder
                 + "\"generationConfig\":{\"responseMimeType\":\"application/json\"}"
                 + "}";
 
-            using (var request = new HttpRequestMessage(HttpMethod.Post, Endpoint))
+            using (var request = new HttpRequestMessage(HttpMethod.Post, endpoint))
             {
                 // Anahtar URL parametresi yerine header'da taşınır; URL'ler log/proxy'lere düşebilir.
                 request.Headers.Add("x-goog-api-key", apiKey);
