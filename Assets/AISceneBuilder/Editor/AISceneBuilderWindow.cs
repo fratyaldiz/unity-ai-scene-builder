@@ -157,10 +157,32 @@ namespace AISceneBuilder
 
         private void OnGenerateClicked()
         {
-            // Adım 4'te burası async API çağrısına bağlanacak.
-            _statusMessage = "Arayüz hazır. API entegrasyonu bir sonraki adımda eklenecek.";
-            _statusType = MessageType.Info;
-            Debug.Log($"[AI Scene Builder] Komut alındı: {_userPrompt}");
+            // GEÇİCİ (Adım 3 testi): API henüz bağlı olmadığı için örnek bir model
+            // cevabı ayrıştırılıyor. Adım 4'te bu blok gerçek async API çağrısıyla değişecek.
+            const string sampleResponse = @"İşte istediğiniz sahne planı:
+```json
+{
+  ""Yerlesimler"": [
+    { ""PrefabAdi"": ""Tree"",  ""PositionX"": 2.0, ""PositionY"": 0, ""PositionZ"": -1.5, ""RotationY"": 45 },
+    { ""PrefabAdi"": ""House"", ""PositionX"": 0.0, ""PositionY"": 0, ""PositionZ"": 0.0,  ""RotationY"": 180 }
+  ]
+}
+```";
+
+            if (ScenePlanParser.TryParse(sampleResponse, out ScenePlan plan, out string error))
+            {
+                _statusMessage = $"Ayrıştırma başarılı: {plan.Yerlesimler.Length} yerleştirme kaydı okundu. " +
+                                 "(Örnek veri — gerçek API Adım 4'te bağlanacak.)";
+                _statusType = MessageType.Info;
+
+                foreach (var item in plan.Yerlesimler)
+                    Debug.Log($"[AI Scene Builder] {item.PrefabAdi} → Pozisyon {item.GetPosition()}, Rotasyon Y={item.RotationY}");
+            }
+            else
+            {
+                _statusMessage = "Ayrıştırma hatası: " + error;
+                _statusType = MessageType.Error;
+            }
         }
 
         private void DrawStatusBar()
