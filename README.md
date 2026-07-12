@@ -22,7 +22,21 @@ Tamamen bir **Editor aracıdır** — Play Mode'da çalışmaz.
 - [x] **Adım 4:** AI API istemcisi (async/await, sağlayıcı soyutlaması: Gemini + Claude)
 - [x] **Adım 5:** Sahne yerleştirici (InstantiatePrefab + Undo)
 - [x] **Adım 6:** Entegrasyon, hata yönetimi ve cila
-- [ ] **Adım 7:** Paketleme ve dağıtım (UPM git URL desteği + .unitypackage Release)
+- [x] **Adım 7:** Paketleme ve dağıtım (UPM git URL desteği)
+
+## Kurulum
+
+**Package Manager ile (önerilen):** Unity'de **Window → Package Manager → + → Add package from git URL** deyin ve şunu yapıştırın:
+
+```
+https://github.com/fratyaldiz/unity-ai-scene-builder.git?path=Assets/AISceneBuilder
+```
+
+Belirli bir sürüme sabitlemek için sonuna `#v1.0.0` ekleyebilirsiniz.
+
+**Elle:** Bu depoyu indirip `Assets/AISceneBuilder` klasörünü kendi projenizin `Assets` klasörüne kopyalayın.
+
+Gereksinim: Unity 2021.3 veya üzeri.
 
 ## Kullanım
 
