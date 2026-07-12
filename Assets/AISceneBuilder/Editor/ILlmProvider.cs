@@ -94,6 +94,29 @@ namespace AISceneBuilder
             return sb.ToString();
         }
 
+        /// <summary>Sık görülen HTTP hata kodları için kullanıcıya yol gösteren Türkçe ipucu.</summary>
+        internal static string HttpHint(int statusCode)
+        {
+            switch (statusCode)
+            {
+                case 400:
+                case 401:
+                case 403:
+                    return " İpucu: API anahtarınızı kontrol edin (yanlış, süresi dolmuş veya yetkisiz olabilir).";
+                case 404:
+                    return " İpucu: Model adı artık geçerli olmayabilir — eklentiyi güncelleyin.";
+                case 429:
+                    return " İpucu: İstek/kota limiti aşıldı. Biraz bekleyip tekrar deneyin.";
+                case 500:
+                case 502:
+                case 503:
+                case 529:
+                    return " İpucu: Sağlayıcı tarafında geçici bir sorun var, tekrar deneyin.";
+                default:
+                    return "";
+            }
+        }
+
         internal static string Truncate(string text, int maxLength = 300)
         {
             if (string.IsNullOrEmpty(text)) return "";

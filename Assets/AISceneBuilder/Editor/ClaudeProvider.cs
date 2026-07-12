@@ -44,7 +44,11 @@ namespace AISceneBuilder
                     string json = await response.Content.ReadAsStringAsync();
 
                     if (!response.IsSuccessStatusCode)
-                        throw new Exception($"Claude API hatası ({(int)response.StatusCode}): {ExtractErrorMessage(json)}");
+                    {
+                        int status = (int)response.StatusCode;
+                        throw new Exception(
+                            $"Claude API hatası ({status}): {ExtractErrorMessage(json)}{LlmRequestUtility.HttpHint(status)}");
+                    }
 
                     var parsed = JsonUtility.FromJson<ClaudeResponse>(json);
                     string text = null;

@@ -4,7 +4,7 @@ Unity için AI destekli sahne tasarım aracı. Metin komutlarını (prompt) seç
 
 Tamamen bir **Editor aracıdır** — Play Mode'da çalışmaz.
 
-## Özellikler (planlanan)
+## Özellikler
 
 - `EditorWindow` tabanlı özel arayüz (API anahtarı + komut girişi)
 - API anahtarı `EditorPrefs`'te saklanır, koda gömülmez
@@ -21,7 +21,7 @@ Tamamen bir **Editor aracıdır** — Play Mode'da çalışmaz.
 - [x] **Adım 3:** JSON veri modelleri ve ayrıştırma
 - [x] **Adım 4:** AI API istemcisi (async/await, sağlayıcı soyutlaması: Gemini + Claude)
 - [x] **Adım 5:** Sahne yerleştirici (InstantiatePrefab + Undo)
-- [ ] **Adım 6:** Entegrasyon, hata yönetimi ve cila
+- [x] **Adım 6:** Entegrasyon, hata yönetimi ve cila
 - [ ] **Adım 7:** Paketleme ve dağıtım (UPM git URL desteği + .unitypackage Release)
 
 ## Kullanım

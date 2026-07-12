@@ -43,7 +43,11 @@ namespace AISceneBuilder
                     string json = await response.Content.ReadAsStringAsync();
 
                     if (!response.IsSuccessStatusCode)
-                        throw new Exception($"Gemini API hatası ({(int)response.StatusCode}): {ExtractErrorMessage(json)}");
+                    {
+                        int status = (int)response.StatusCode;
+                        throw new Exception(
+                            $"Gemini API hatası ({status}): {ExtractErrorMessage(json)}{LlmRequestUtility.HttpHint(status)}");
+                    }
 
                     var parsed = JsonUtility.FromJson<GeminiResponse>(json);
                     string text = null;

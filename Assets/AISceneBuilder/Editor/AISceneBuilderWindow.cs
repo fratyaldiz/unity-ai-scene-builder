@@ -14,6 +14,8 @@ namespace AISceneBuilder
         // API anahtarları EditorPrefs'te saklanır; koda gömülmez, versiyon kontrolüne girmez.
         // Her sağlayıcının anahtarı ayrı tutulur, sağlayıcı değişince ilgili anahtar yüklenir.
         private const string ProviderPrefKey = "AISceneBuilder_Provider";
+        // Komut metni SessionState'te tutulur: derleme/domain reload sonrası kaybolmaz.
+        private const string PromptStateKey = "AISceneBuilder_LastPrompt";
         private string ApiKeyPrefKey => "AISceneBuilder_ApiKey_" + _providerType;
 
         private LlmProviderType _providerType = LlmProviderType.Gemini;
@@ -40,6 +42,7 @@ namespace AISceneBuilder
         {
             _providerType = (LlmProviderType)EditorPrefs.GetInt(ProviderPrefKey, (int)LlmProviderType.Gemini);
             _apiKey = EditorPrefs.GetString(ApiKeyPrefKey, "");
+            _userPrompt = SessionState.GetString(PromptStateKey, "");
             _prefabs = PrefabScanner.ScanProject();
         }
 
@@ -148,7 +151,10 @@ namespace AISceneBuilder
             EditorGUILayout.LabelField("Sahne Komutu", EditorStyles.boldLabel);
 
             _promptScroll = EditorGUILayout.BeginScrollView(_promptScroll, GUILayout.Height(100f));
+            EditorGUI.BeginChangeCheck();
             _userPrompt = EditorGUILayout.TextArea(_userPrompt, GUILayout.ExpandHeight(true));
+            if (EditorGUI.EndChangeCheck())
+                SessionState.SetString(PromptStateKey, _userPrompt);
             EditorGUILayout.EndScrollView();
 
             EditorGUILayout.LabelField(
@@ -194,7 +200,11 @@ namespace AISceneBuilder
                 string response = await provider.RequestScenePlanAsync(
                     _apiKey,
                     PrefabScanner.BuildNameList(_prefabs),
-                    _userPrompt);
+                    _userPrompt.Trim());
+
+                // İstek sürerken pencere kapatıldıysa yok edilmiş nesneye dokunulmaz.
+                if (this == null)
+                    return;
 
                 if (ScenePlanParser.TryParse(response, out ScenePlan plan, out string error))
                 {
@@ -220,13 +230,17 @@ namespace AISceneBuilder
             }
             catch (Exception e)
             {
-                SetStatus("İstek başarısız: " + e.Message, MessageType.Error);
                 Debug.LogException(e);
+                if (this != null)
+                    SetStatus("İstek başarısız: " + e.Message, MessageType.Error);
             }
             finally
             {
-                _isProcessing = false;
-                Repaint();
+                if (this != null)
+                {
+                    _isProcessing = false;
+                    Repaint();
+                }
             }
         }
 
