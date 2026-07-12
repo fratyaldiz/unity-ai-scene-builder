@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,6 +21,10 @@ namespace AISceneBuilder
         private MessageType _statusType = MessageType.Info;
         private Vector2 _promptScroll;
 
+        private List<PrefabScanner.PrefabInfo> _prefabs = new List<PrefabScanner.PrefabInfo>();
+        private bool _prefabFoldout;
+        private Vector2 _prefabScroll;
+
         [MenuItem("Tools/AI Scene Builder")]
         public static void ShowWindow()
         {
@@ -30,6 +35,7 @@ namespace AISceneBuilder
         private void OnEnable()
         {
             _apiKey = EditorPrefs.GetString(ApiKeyPrefKey, "");
+            _prefabs = PrefabScanner.ScanProject();
         }
 
         private void OnGUI()
@@ -37,6 +43,8 @@ namespace AISceneBuilder
             DrawHeader();
             EditorGUILayout.Space(8f);
             DrawApiKeySection();
+            EditorGUILayout.Space(8f);
+            DrawPrefabSection();
             EditorGUILayout.Space(8f);
             DrawPromptSection();
             EditorGUILayout.Space(8f);
@@ -85,6 +93,36 @@ namespace AISceneBuilder
                 EditorGUILayout.HelpBox(
                     "API anahtarı girilmedi. Anahtar EditorPrefs'te yerel olarak saklanır, projeyle paylaşılmaz.",
                     MessageType.Warning);
+            }
+        }
+
+        private void DrawPrefabSection()
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                _prefabFoldout = EditorGUILayout.Foldout(
+                    _prefabFoldout,
+                    $"Projedeki Prefab'ler ({_prefabs.Count})",
+                    toggleOnLabelClick: true);
+
+                if (GUILayout.Button("Yenile", EditorStyles.miniButton, GUILayout.Width(55f)))
+                    _prefabs = PrefabScanner.ScanProject();
+            }
+
+            if (_prefabs.Count == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "Projede hiç prefab bulunamadı. AI'nın yerleştirebileceği objeler için Assets altına prefab ekleyin.",
+                    MessageType.Warning);
+                return;
+            }
+
+            if (_prefabFoldout)
+            {
+                _prefabScroll = EditorGUILayout.BeginScrollView(_prefabScroll, GUILayout.MaxHeight(120f));
+                foreach (var prefab in _prefabs)
+                    EditorGUILayout.LabelField(prefab.Name, EditorStyles.miniLabel);
+                EditorGUILayout.EndScrollView();
             }
         }
 

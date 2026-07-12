@@ -1,0 +1,11 @@
+# Unity'nin YAML tabanlı dosyaları GitHub dil istatistiğine girmesin
+# (.asset uzantısı Wolfram Language ile karıştığı için depo yanlış sınıflandırılıyor)
+*.asset linguist-generated
+*.unity linguist-generated
+*.prefab linguist-generated
+*.meta linguist-generated
+*.mat linguist-generated
+*.anim linguist-generated
+*.controller linguist-generated
+*.inputactions linguist-generated
+*.wlt linguist-generated
