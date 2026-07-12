@@ -198,13 +198,20 @@ namespace AISceneBuilder
 
                 if (ScenePlanParser.TryParse(response, out ScenePlan plan, out string error))
                 {
-                    SetStatus(
-                        $"{plan.Yerlesimler.Length} yerleştirme planı alındı. " +
-                        "(Sahneye yerleştirme Adım 5'te bağlanacak — plan Console'a yazıldı.)",
-                        MessageType.Info);
+                    int placedCount = ScenePlacer.PlacePlan(plan, _prefabs, out List<string> warnings);
 
-                    foreach (var item in plan.Yerlesimler)
-                        Debug.Log($"[AI Scene Builder] {item.PrefabAdi} → Pozisyon {item.GetPosition()}, Rotasyon Y={item.RotationY}");
+                    foreach (string warning in warnings)
+                        Debug.LogWarning("[AI Scene Builder] " + warning);
+
+                    if (placedCount > 0)
+                    {
+                        string suffix = warnings.Count > 0 ? $" ({warnings.Count} kayıt atlandı — Console'a bakın.)" : "";
+                        SetStatus($"{placedCount} obje sahneye yerleştirildi.{suffix} Geri almak için Ctrl+Z.", MessageType.Info);
+                    }
+                    else
+                    {
+                        SetStatus("Plan alındı ama hiçbir obje yerleştirilemedi — Console'daki uyarılara bakın.", MessageType.Error);
+                    }
                 }
                 else
                 {

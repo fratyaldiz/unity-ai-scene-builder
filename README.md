@@ -20,7 +20,7 @@ Tamamen bir **Editor aracıdır** — Play Mode'da çalışmaz.
 - [x] **Adım 2:** Prefab tarayıcı (`AssetDatabase` ile proje prefab listesi)
 - [x] **Adım 3:** JSON veri modelleri ve ayrıştırma
 - [x] **Adım 4:** AI API istemcisi (async/await, sağlayıcı soyutlaması: Gemini + Claude)
-- [ ] **Adım 5:** Sahne yerleştirici (InstantiatePrefab + Undo)
+- [x] **Adım 5:** Sahne yerleştirici (InstantiatePrefab + Undo)
 - [ ] **Adım 6:** Entegrasyon, hata yönetimi ve cila
 - [ ] **Adım 7:** Paketleme ve dağıtım (UPM git URL desteği + .unitypackage Release)
 
