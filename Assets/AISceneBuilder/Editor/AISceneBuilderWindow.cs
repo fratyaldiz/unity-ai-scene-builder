@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -10,9 +11,12 @@ namespace AISceneBuilder
     /// </summary>
     public class AISceneBuilderWindow : EditorWindow
     {
-        // API anahtarı EditorPrefs'te saklanır; koda gömülmez, versiyon kontrolüne girmez.
-        private const string ApiKeyPrefKey = "AISceneBuilder_ApiKey";
+        // API anahtarları EditorPrefs'te saklanır; koda gömülmez, versiyon kontrolüne girmez.
+        // Her sağlayıcının anahtarı ayrı tutulur, sağlayıcı değişince ilgili anahtar yüklenir.
+        private const string ProviderPrefKey = "AISceneBuilder_Provider";
+        private string ApiKeyPrefKey => "AISceneBuilder_ApiKey_" + _providerType;
 
+        private LlmProviderType _providerType = LlmProviderType.Gemini;
         private string _apiKey = "";
         private string _userPrompt = "";
         private bool _showApiKey;      // Anahtarı göster/gizle
@@ -34,6 +38,7 @@ namespace AISceneBuilder
 
         private void OnEnable()
         {
+            _providerType = (LlmProviderType)EditorPrefs.GetInt(ProviderPrefKey, (int)LlmProviderType.Gemini);
             _apiKey = EditorPrefs.GetString(ApiKeyPrefKey, "");
             _prefabs = PrefabScanner.ScanProject();
         }
@@ -70,13 +75,22 @@ namespace AISceneBuilder
         {
             EditorGUILayout.LabelField("API Ayarları", EditorStyles.boldLabel);
 
+            EditorGUI.BeginChangeCheck();
+            var newProvider = (LlmProviderType)EditorGUILayout.EnumPopup("AI Sağlayıcısı", _providerType);
+            if (EditorGUI.EndChangeCheck())
+            {
+                _providerType = newProvider;
+                EditorPrefs.SetInt(ProviderPrefKey, (int)_providerType);
+                _apiKey = EditorPrefs.GetString(ApiKeyPrefKey, "");
+            }
+
             using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUI.BeginChangeCheck();
 
                 string newKey = _showApiKey
-                    ? EditorGUILayout.TextField("Claude API Anahtarı", _apiKey)
-                    : EditorGUILayout.PasswordField("Claude API Anahtarı", _apiKey);
+                    ? EditorGUILayout.TextField("API Anahtarı", _apiKey)
+                    : EditorGUILayout.PasswordField("API Anahtarı", _apiKey);
 
                 if (EditorGUI.EndChangeCheck())
                 {
@@ -90,8 +104,11 @@ namespace AISceneBuilder
 
             if (string.IsNullOrEmpty(_apiKey))
             {
+                string hint = _providerType == LlmProviderType.Gemini
+                    ? "Ücretsiz Gemini anahtarı: aistudio.google.com/apikey"
+                    : "Claude anahtarı: platform.claude.com (ön ödemeli kredi gerekir)";
                 EditorGUILayout.HelpBox(
-                    "API anahtarı girilmedi. Anahtar EditorPrefs'te yerel olarak saklanır, projeyle paylaşılmaz.",
+                    $"API anahtarı girilmedi. {hint}\nAnahtar EditorPrefs'te yerel olarak saklanır, projeyle paylaşılmaz.",
                     MessageType.Warning);
             }
         }
@@ -155,34 +172,61 @@ namespace AISceneBuilder
             }
         }
 
-        private void OnGenerateClicked()
+        private async void OnGenerateClicked()
         {
-            // GEÇİCİ (Adım 3 testi): API henüz bağlı olmadığı için örnek bir model
-            // cevabı ayrıştırılıyor. Adım 4'te bu blok gerçek async API çağrısıyla değişecek.
-            const string sampleResponse = @"İşte istediğiniz sahne planı:
-```json
-{
-  ""Yerlesimler"": [
-    { ""PrefabAdi"": ""Tree"",  ""PositionX"": 2.0, ""PositionY"": 0, ""PositionZ"": -1.5, ""RotationY"": 45 },
-    { ""PrefabAdi"": ""House"", ""PositionX"": 0.0, ""PositionY"": 0, ""PositionZ"": 0.0,  ""RotationY"": 180 }
-  ]
-}
-```";
-
-            if (ScenePlanParser.TryParse(sampleResponse, out ScenePlan plan, out string error))
+            // Prefab listesi istek anında tazelenir; AI yalnızca gerçekten var olan
+            // prefab isimlerini görmelidir.
+            _prefabs = PrefabScanner.ScanProject();
+            if (_prefabs.Count == 0)
             {
-                _statusMessage = $"Ayrıştırma başarılı: {plan.Yerlesimler.Length} yerleştirme kaydı okundu. " +
-                                 "(Örnek veri — gerçek API Adım 4'te bağlanacak.)";
-                _statusType = MessageType.Info;
+                SetStatus("Projede hiç prefab yok — önce Assets altına prefab ekleyin.", MessageType.Error);
+                return;
+            }
 
-                foreach (var item in plan.Yerlesimler)
-                    Debug.Log($"[AI Scene Builder] {item.PrefabAdi} → Pozisyon {item.GetPosition()}, Rotasyon Y={item.RotationY}");
-            }
-            else
+            ILlmProvider provider = LlmProviderFactory.Create(_providerType);
+
+            _isProcessing = true;
+            SetStatus($"{provider.DisplayName} yanıtı bekleniyor...", MessageType.Info);
+            Repaint();
+
+            try
             {
-                _statusMessage = "Ayrıştırma hatası: " + error;
-                _statusType = MessageType.Error;
+                string response = await provider.RequestScenePlanAsync(
+                    _apiKey,
+                    PrefabScanner.BuildNameList(_prefabs),
+                    _userPrompt);
+
+                if (ScenePlanParser.TryParse(response, out ScenePlan plan, out string error))
+                {
+                    SetStatus(
+                        $"{plan.Yerlesimler.Length} yerleştirme planı alındı. " +
+                        "(Sahneye yerleştirme Adım 5'te bağlanacak — plan Console'a yazıldı.)",
+                        MessageType.Info);
+
+                    foreach (var item in plan.Yerlesimler)
+                        Debug.Log($"[AI Scene Builder] {item.PrefabAdi} → Pozisyon {item.GetPosition()}, Rotasyon Y={item.RotationY}");
+                }
+                else
+                {
+                    SetStatus("Ayrıştırma hatası: " + error, MessageType.Error);
+                }
             }
+            catch (Exception e)
+            {
+                SetStatus("İstek başarısız: " + e.Message, MessageType.Error);
+                Debug.LogException(e);
+            }
+            finally
+            {
+                _isProcessing = false;
+                Repaint();
+            }
+        }
+
+        private void SetStatus(string message, MessageType type)
+        {
+            _statusMessage = message;
+            _statusType = type;
         }
 
         private void DrawStatusBar()

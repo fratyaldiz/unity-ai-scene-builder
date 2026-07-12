@@ -19,7 +19,7 @@ Tamamen bir **Editor aracıdır** — Play Mode'da çalışmaz.
 - [x] **Adım 1:** EditorWindow arayüzü (görsel UI, API isteği yok)
 - [x] **Adım 2:** Prefab tarayıcı (`AssetDatabase` ile proje prefab listesi)
 - [x] **Adım 3:** JSON veri modelleri ve ayrıştırma
-- [ ] **Adım 4:** AI API istemcisi (async/await, sağlayıcı soyutlaması: Gemini, Claude, ...)
+- [x] **Adım 4:** AI API istemcisi (async/await, sağlayıcı soyutlaması: Gemini + Claude)
 - [ ] **Adım 5:** Sahne yerleştirici (InstantiatePrefab + Undo)
 - [ ] **Adım 6:** Entegrasyon, hata yönetimi ve cila
 - [ ] **Adım 7:** Paketleme ve dağıtım (UPM git URL desteği + .unitypackage Release)
@@ -28,4 +28,5 @@ Tamamen bir **Editor aracıdır** — Play Mode'da çalışmaz.
 
 1. Projeyi Unity ile açın (dosyalar `Assets/AISceneBuilder/` altındadır).
 2. Menüden **Tools → AI Scene Builder** penceresini açın.
-3. AI sağlayıcınızın API anahtarını girin ve komutunuzu yazın.
+3. Pencereden sağlayıcınızı seçin: **Gemini** (ücretsiz katman — [aistudio.google.com/apikey](https://aistudio.google.com/apikey)) veya **Claude** ([platform.claude.com](https://platform.claude.com)).
+4. API anahtarınızı girin ve komutunuzu yazın.
